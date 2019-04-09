@@ -1,0 +1,20 @@
+{
+  "name": "travel-report-crawler",
+  "version": "1.0.0",
+  "description": "travel report crawler on puppeteer",
+  "main": "index.js",
+  "author": "prxg22",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "start": "nodemon .",
+    "test": "jest *.spec.js"
+  },
+  "dependencies": {
+    "puppeteer": "^1.14.0"
+  },
+  "devDependencies": {
+    "jest": "^24.7.1",
+    "nodemon": "^1.18.10"
+  }
+}
