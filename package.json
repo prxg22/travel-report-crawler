@@ -8,12 +8,14 @@
   "private": true,
   "scripts": {
     "start": "nodemon .",
-    "test": "jest *.spec.js"
+    "test": "jest *.spec.js",
+    "pretest": "eslint index.js --fix"
   },
   "dependencies": {
     "puppeteer": "^1.14.0"
   },
   "devDependencies": {
+    "eslint": "^5.16.0",
     "jest": "^24.7.1",
     "nodemon": "^1.18.10"
   }
