@@ -43,7 +43,7 @@ jobs:
 
 workflows:
   version: 2
-  only_test:
+  _test:
     jobs:
       - test
 
