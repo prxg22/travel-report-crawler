@@ -1,15 +1,17 @@
 {
   "name": "travel-report-crawler",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "travel report crawler on puppeteer",
   "main": "index.js",
   "author": "prxg22",
   "license": "MIT",
-  "private": true,
+  "private": false,
   "scripts": {
     "start": "nodemon .",
-    "test": "jest *.spec.js",
-    "pretest": "eslint index.js --fix"
+    "test": "jest *.spec.js --detectOpenHandles --forceExit",
+    "lint": "eslint index.js --fix",
+    "pretest": "yarn lint",
+    "prepublish": "yarn test"
   },
   "dependencies": {
     "puppeteer": "^1.14.0"

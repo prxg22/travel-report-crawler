@@ -43,21 +43,39 @@ const requestTickets = (page, url) => new Promise((resolve, reject) => {
   page.goto(url, { waitUntil: 'networkidle2' })
 })
 
+const parseRound = ({ airportCode, date }) => `${airportCode} - ${date}`
+
+const parseRoute = ({
+  airlines,
+  arrival,
+  departure,
+  seatsRemaining: seats,
+  stopsCount: stops
+}, referenceData) => {
+  const airline = referenceData[airlines[0]]
+
+  return {
+    airline,
+    stops,
+    seats,
+    departure: parseRound(departure),
+    arrival: parseRound(arrival)
+  }
+}
+
 const parseCluster = ({
   priceDetail: { totalFare: { amount } },
   routeChoices,
-  airlines,
 }, { referenceData, currency }) => {
   const [ route1, route2 ] = routeChoices
 
   const price = `${currency}${amount}`
-  const airline = referenceData.airlines[airlines[0]]
   const routes = {
-    [route1.type]: route1.routes[route1.selectedRouteIndex],
-    [route2.type]: route2.routes[route2.selectedRouteIndex]
+    [route1.type.toLowerCase()]: parseRoute(route1.routes[route1.selectedRouteIndex], referenceData.airlines),
+    [route2.type.toLowerCase()]: parseRoute(route2.routes[route2.selectedRouteIndex], referenceData.airlines),
   }
 
-  return { price , routes , airline }
+  return { price , routes }
 }
 
 const findBestTicket = (reducer, { arg: { clusters, currencies: [{ mask: currency }], referenceData }}) => {
@@ -66,23 +84,28 @@ const findBestTicket = (reducer, { arg: { clusters, currencies: [{ mask: currenc
   return parseCluster(bestCluster, { referenceData, currency })
 }
 
-const parseTickets = (unparsed) =>  unparsed
+const reduceTickets = (unparsed) =>  unparsed
   .reduce(findBestTicket, undefined)
 
-const findTicket = async ({ from, to,  date1, date2, adults, children, babies }) => {
+const findTicket = async ({ from: _from, to: _to,  date1, date2, adults, children, babies }) => {
+  const from = _from.toUpperCase()
+  const to = _to.toUpperCase()
   const browser = await puppeteer.launch()
   const page = await browser.newPage()
   page.setDefaultTimeout(timeout)
 
   const ticketUrl = formatTicketUrl({ from, to,  date1, date2, adults, children, babies })
   try {
+    console.log('ticket url', ticketUrl)
+    console.log('init search...')
     const unparsedTickets = await requestTickets(page, ticketUrl)
-    const ticket = parseTickets(unparsedTickets)
+    console.log('found some tickets...')
+    console.log('parsing ticket...')
+    const ticket = reduceTickets(unparsedTickets)
     return ticket
   } catch (e) {
     throw e
   }
-
 }
 
 module.exports = findTicket
