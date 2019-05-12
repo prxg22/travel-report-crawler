@@ -16,18 +16,20 @@ jobs:
           - v1-dependencies-{{ checksum "package.json" }}
           - v1-dependencies-
 
-      - run: yarn
+      - run:
+          name: Install dependencies
+          command: yarn
 
       - run:
           name: Update
-          working_directory: /
           command: |
             sudo apt-get update -y
+
       - run:
-          name: Update
-          working_directory: /
+          name: Upgrade
           command: |
             sudo apt-get upgrade -y
+
       - run:
           name: Install Chrome headless dependencies
           working_directory: /
@@ -37,6 +39,7 @@ jobs:
             libpango-1.0-0 libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 libxcb1 libxcomposite1 \
             libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 \
             ca-certificates fonts-liberation libappindicator1 libnss3 lsb-release xdg-utils wget --fix-missing
+
       - run:
           name: Run tests
           command: yarn test
@@ -49,6 +52,7 @@ jobs:
       - persist_to_workspace:
           root: ~/repo
           paths: .
+
   deploy:
     <<: *defaults
     steps:
