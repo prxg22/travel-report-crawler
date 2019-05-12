@@ -17,8 +17,7 @@ jobs:
           - v1-dependencies-
 
       - run: yarn
-            - run: npm install
-      # TODO - get this cached so that you don't have to pull down the binaries each time
+
       - run:
           name: Update
           working_directory: /
