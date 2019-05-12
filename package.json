@@ -10,8 +10,6 @@
     "start": "nodemon .",
     "test": "jest *.spec.js --detectOpenHandles --forceExit",
     "lint": "eslint index.js --fix",
-    "pretest": "yarn lint",
-    "prepublish": "yarn test"
   },
   "dependencies": {
     "puppeteer": "^1.14.0"
