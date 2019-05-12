@@ -1,6 +1,6 @@
 {
   "name": "travel-report-crawler",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "travel report crawler on puppeteer",
   "main": "index.js",
   "author": "prxg22",
