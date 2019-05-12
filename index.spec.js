@@ -29,6 +29,8 @@ describe("report", () => {
         inbound: expect.objectContaining(routeExpect),
         outbound: expect.objectContaining(routeExpect),
       }),
+      url: expect.any(String),
+      _date: expect.any(Date),
     })
     done();
   })

@@ -102,7 +102,11 @@ const findTicket = async ({ from: _from, to: _to,  date1, date2, adults, childre
     console.log('found some tickets...')
     console.log('parsing ticket...')
     const ticket = reduceTickets(unparsedTickets)
-    return ticket
+    return {
+      url: ticketUrl,
+      _date: new Date(),
+      ...ticket
+    }
   } catch (e) {
     throw e
   }
