@@ -90,7 +90,7 @@ const reduceTickets = (unparsed) =>  unparsed
 const findTicket = async ({ from: _from, to: _to,  date1, date2, adults, children, babies }) => {
   const from = _from.toUpperCase()
   const to = _to.toUpperCase()
-  const browser = await puppeteer.launch()
+  const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox']})
   const page = await browser.newPage()
   page.setDefaultTimeout(timeout)
 

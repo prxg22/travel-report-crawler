@@ -5,8 +5,8 @@ jest.setTimeout(60000)
 const mock = {
   from: 'sao',
   to: 'nat',
-  date1: '2019-12-01',
-  date2: '2019-12-06',
+  date1: '2020-03-01',
+  date2: '2019-03-06',
   adults: 2,
   children: 0,
   babies: 1,
