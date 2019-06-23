@@ -2,6 +2,8 @@ const puppeteer = require('puppeteer')
 
 const decolarUrl = 'https://www.decolar.com/shop/flights/search/roundtrip/{from}/{to}/{date1}/{date2}/{adults}/{children}/{babies}/NA/NA/NA/NA/NA/?from=SB'
 const salesRegex = /^https:\/\/www.decolar.com\/shop\/flights-busquets\/api\/v1\/web\/search\?adults=.*/g
+const badRequestRegex = /^https:\/\/www.decolar.com\/shop\/flights.*/
+
 const timeout = 60000
 
 const formatTicketUrl = ({ from, to, date1, date2, adults, children, babies }) => decolarUrl
@@ -28,20 +30,64 @@ const identifyTicketResponse = response => {
   )
 }
 
-const requestTickets = (page, url) => new Promise((resolve, reject) => {
-  page.on('response', async response => {
-    if (!identifyTicketResponse(response)) return
+const checkBadResponse = response => {
+  const isBadRequest = +response.status() >= 300
+  const hasBadRequestUrl = badRequestRegex.test(response.url())
 
-    try {
-      const tickets = await response.json()
-      resolve(tickets)
-    } catch (e) {
-      reject(e)
-    }
+  if (
+    !isBadRequest ||
+    !hasBadRequestUrl
+  ) return
+
+  throw Error(`bad script found ${response.url()}`)
+}
+
+// const requestTickets = (page, url) => new Promise((resolve, reject) => {
+//   page.on('response', async response => {
+//     try {
+//       checkBadResponse(response)
+//       if (!identifyTicketResponse(response)) return
+//       const tickets = await response.json()
+//       resolve(tickets)
+//     } catch (e) {
+//       await page._client.send("Page.stopLoading")
+//       throw e
+//     }
+//   })
+//
+//   page.goto(url, { waitUntil: 'networkidle2' })
+//     .then(resolve)
+//     .catch(reject)
+// })
+
+const requestTickets = async (page, url) => {
+  const tickets = new Promise((resolve, reject) => {
+    page.on('response', response => {
+      const close = async (e) => {
+        await page.close()
+      }
+
+      try {
+        checkBadResponse(response)
+      } catch(e) {
+        close(e)
+      }
+
+      if (!identifyTicketResponse(response)) return
+
+      response.json()
+        .then(resolve)
+        .catch(close)
+    })
   })
 
-  page.goto(url, { waitUntil: 'networkidle2' })
-})
+  try {
+    await page.goto(url, { waitUntil: 'networkidle2' })
+    return tickets
+  } catch (e) {
+    throw e
+  }
+}
 
 const parseRound = ({ airportCode, date }) => `${airportCode} - ${date}`
 
@@ -88,26 +134,39 @@ const reduceTickets = (unparsed) =>  unparsed
   .reduce(findBestTicket, undefined)
 
 const findTicket = async ({ from: _from, to: _to,  date1, date2, adults, children, babies }) => {
-  const from = _from.toUpperCase()
-  const to = _to.toUpperCase()
-  const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox']})
-  const page = await browser.newPage()
-  page.setDefaultTimeout(timeout)
+  let browser, page
 
-  const ticketUrl = formatTicketUrl({ from, to,  date1, date2, adults, children, babies })
+  const close = async () => {
+    try {
+      if (!page.isClosed) await page.close()
+      await browser.close()
+    } catch(e) {
+      console.error(`error closing browser/page: ${e.message}`, e.stack)
+    }
+  }
+
   try {
-    console.log('ticket url', ticketUrl)
-    console.log('init search...')
+    const from = _from.toUpperCase()
+    const to = _to.toUpperCase()
+    browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox']})
+    page = await browser.newPage()
+    page.setDefaultTimeout(timeout)
+
+    const ticketUrl = formatTicketUrl({ from, to,  date1, date2, adults, children, babies })
+    console.log(`starting search in`, ticketUrl)
     const unparsedTickets = await requestTickets(page, ticketUrl)
-    console.log('found some tickets...')
-    console.log('parsing ticket...')
+    close()
+    console.log(`tickets found. starting parse`)
     const ticket = reduceTickets(unparsedTickets)
+    console.log('best ticket found', ticket)
+
     return {
       url: ticketUrl,
       _date: new Date(),
       ...ticket
     }
   } catch (e) {
+    await close()
     throw e
   }
 }

@@ -2,16 +2,6 @@ const report = require('./index')
 
 jest.setTimeout(60000)
 
-const mock = {
-  from: 'sao',
-  to: 'nat',
-  date1: '2020-03-01',
-  date2: '2019-03-06',
-  adults: 2,
-  children: 0,
-  babies: 1,
-}
-
 const routeExpect = {
   airline: expect.any(String),
   arrival: expect.any(String),
@@ -22,7 +12,24 @@ const routeExpect = {
 
 describe("report", () => {
   it("should retrieve ticket", async done => {
-    const ticket = await report(mock)
+
+    const mock = {
+      from: 'sao',
+      to: 'nat',
+      date1: '2020-02-01',
+      date2: '2020-02-10',
+      adults: 2,
+      children: 0,
+      babies: 1,
+    }
+
+    let ticket
+    try {
+      ticket = await report(mock)
+    } catch(e) {
+      console.error(e)
+    }
+
     expect(ticket).toMatchObject({
       price: expect.any(String),
       routes: expect.objectContaining({
@@ -32,6 +39,29 @@ describe("report", () => {
       url: expect.any(String),
       _date: expect.any(Date),
     })
-    done();
+
+
+    done()
+  })
+
+  it("should fail on past dates", async done => {
+    const mockFail = {
+      from: 'sao',
+      to: 'bsb',
+      date1: '2019-02-01',
+      date2: '2019-02-10',
+      adults: 2,
+      children: 0,
+      babies: 1,
+    }
+
+    try {
+      await report(mockFail)
+      done.fail(Error('function returned'))
+    }
+    catch(e) {
+      expect(e).toBeInstanceOf(Error)
+      done()
+    }
   })
 })
