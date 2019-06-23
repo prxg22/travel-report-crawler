@@ -3,7 +3,7 @@ version: 2
 defaults: &defaults
   working_directory: ~/repo
   docker:
-    - image: buildkite/puppeteer:latest
+    - image: prxg22/node-puppeteer:latest
 
 jobs:
   test:
@@ -47,18 +47,13 @@ jobs:
 
 workflows:
   version: 2
-  _test:
-    jobs:
-      - test
 
-  _deploy:
+  workflow-1:
     jobs:
       - test
       - deploy:
           requires:
             - test
           filters:
-            tags:
-              only: /.*/
             branches:
-              ignore: /.*/
+              only: /master/
